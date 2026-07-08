@@ -2,6 +2,8 @@
 
 import React, { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { getOwnerId, mergeGuestCart } from '../../lib/cart';
+import { mergeGuestWishlist } from '../../lib/wishlist';
 
 export default function LoginPasswordPage() {
   const router = useRouter();
@@ -23,6 +25,10 @@ export default function LoginPasswordPage() {
 
     setLoading(true);
 
+    // Capture the guest id BEFORE we overwrite localStorage with the
+    // logged-in user, so we know what to merge into their account.
+    const guestOwnerId = getOwnerId();
+
     try {
       const res = await fetch('http://localhost:5000/api/auth/login', {
         method: 'POST',
@@ -40,6 +46,14 @@ export default function LoginPasswordPage() {
 
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
+
+      // Now that localStorage has the logged-in user, getOwnerId() returns
+      // "user-<id>". Move anything saved as a guest onto this account.
+      const userOwnerId = `user-${data.user.id}`;
+      await Promise.all([
+        mergeGuestCart(guestOwnerId, userOwnerId),
+        mergeGuestWishlist(guestOwnerId, userOwnerId),
+      ]);
 
       router.push('/');
     } catch (err) {

@@ -355,6 +355,78 @@ app.delete('/api/wishlist/:ownerId', async (req, res) => {
   }
 });
 
+// ---------------------------------------------------------------------------
+// MERGE ON LOGIN: moves a guest's cart/wishlist rows onto the logged-in
+// user's ownerId, so items added before login aren't lost.
+// ---------------------------------------------------------------------------
+
+// POST /api/cart/merge — { guestOwnerId, userOwnerId }
+app.post('/api/cart/merge', async (req, res) => {
+  try {
+    const { guestOwnerId, userOwnerId } = req.body;
+    if (!guestOwnerId || !userOwnerId || guestOwnerId === userOwnerId) {
+      return res.json({ success: true, merged: 0 });
+    }
+
+    const guestItems = await prisma.cartItem.findMany({ where: { ownerId: guestOwnerId } });
+
+    for (const guestItem of guestItems) {
+      const existing = await prisma.cartItem.findUnique({
+        where: { ownerId_productId: { ownerId: userOwnerId, productId: guestItem.productId } },
+      });
+
+      if (existing) {
+        await prisma.cartItem.update({
+          where: { id: existing.id },
+          data: { quantity: existing.quantity + guestItem.quantity },
+        });
+      } else {
+        await prisma.cartItem.create({
+          data: { ownerId: userOwnerId, productId: guestItem.productId, quantity: guestItem.quantity },
+        });
+      }
+    }
+
+    await prisma.cartItem.deleteMany({ where: { ownerId: guestOwnerId } });
+
+    res.json({ success: true, merged: guestItems.length });
+  } catch (error) {
+    console.error('Merge cart error:', error);
+    res.status(500).json({ error: 'Failed to merge cart.' });
+  }
+});
+
+// POST /api/wishlist/merge — { guestOwnerId, userOwnerId }
+app.post('/api/wishlist/merge', async (req, res) => {
+  try {
+    const { guestOwnerId, userOwnerId } = req.body;
+    if (!guestOwnerId || !userOwnerId || guestOwnerId === userOwnerId) {
+      return res.json({ success: true, merged: 0 });
+    }
+
+    const guestItems = await prisma.wishlistItem.findMany({ where: { ownerId: guestOwnerId } });
+
+    for (const guestItem of guestItems) {
+      const existing = await prisma.wishlistItem.findUnique({
+        where: { ownerId_productId: { ownerId: userOwnerId, productId: guestItem.productId } },
+      });
+
+      if (!existing) {
+        await prisma.wishlistItem.create({
+          data: { ownerId: userOwnerId, productId: guestItem.productId },
+        });
+      }
+    }
+
+    await prisma.wishlistItem.deleteMany({ where: { ownerId: guestOwnerId } });
+
+    res.json({ success: true, merged: guestItems.length });
+  } catch (error) {
+    console.error('Merge wishlist error:', error);
+    res.status(500).json({ error: 'Failed to merge wishlist.' });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`🚀 Store API Backend listening live on http://localhost:${PORT}`);
 });

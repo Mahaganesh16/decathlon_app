@@ -101,3 +101,20 @@ export async function clearCart() {
   await assertOk(res, 'clear cart');
   return res.json();
 }
+
+// Call this right after a successful login, passing the guest id that was
+// active *before* login. Moves any items added while browsing as a guest
+// onto the now-logged-in user's account.
+export async function mergeGuestCart(guestOwnerId: string, userOwnerId: string) {
+  if (!guestOwnerId || guestOwnerId === userOwnerId) return;
+  try {
+    const res = await fetch(`${API_BASE}/api/cart/merge`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ guestOwnerId, userOwnerId }),
+    });
+    await assertOk(res, 'merge cart');
+  } catch (err) {
+    console.error('[cart] merge failed:', err);
+  }
+}

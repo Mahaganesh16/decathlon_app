@@ -70,3 +70,20 @@ export async function clearWishlist() {
   await assertOk(res, 'clear wishlist');
   return res.json();
 }
+
+// Call this right after a successful login, passing the guest id that was
+// active *before* login. Moves any items saved while browsing as a guest
+// onto the now-logged-in user's account.
+export async function mergeGuestWishlist(guestOwnerId: string, userOwnerId: string) {
+  if (!guestOwnerId || guestOwnerId === userOwnerId) return;
+  try {
+    const res = await fetch(`${API_BASE}/api/wishlist/merge`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ guestOwnerId, userOwnerId }),
+    });
+    await assertOk(res, 'merge wishlist');
+  } catch (err) {
+    console.error('[wishlist] merge failed:', err);
+  }
+}
