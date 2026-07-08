@@ -1,0 +1,91 @@
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model AlertBanner {
+  id       Int    @id @default(autoincrement())
+  text     String
+  linkText String
+  email    String
+}
+
+model Coupon {
+  id          Int    @id @default(autoincrement())
+  code        String
+  discount    String
+  minPurchase String
+  bgColor     String
+}
+
+model QuickLink {
+  id       Int    @id @default(autoincrement())
+  title    String
+  imageUrl String @db.VarChar(1000)
+}
+
+model Product {
+  id            Int            @id @default(autoincrement())
+  brand         String
+  name          String
+  price         Int
+  mrp           Int
+  rating        Decimal        @default(4.5)
+  reviews       String         @default("4.3k")
+  discountTag   String?
+  imageUrl      String         @db.VarChar(1000)
+  category      String
+  cartItems     CartItem[]
+  wishlistItems WishlistItem[]
+}
+
+model CartItem {
+  id        Int      @id @default(autoincrement())
+  ownerId   String
+  productId Int
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now())
+  product   Product  @relation(fields: [productId], references: [id])
+
+  @@unique([ownerId, productId])
+}
+
+model WishlistItem {
+  id        Int      @id @default(autoincrement())
+  ownerId   String
+  productId Int
+  createdAt DateTime @default(now())
+  product   Product  @relation(fields: [productId], references: [id])
+
+  @@unique([ownerId, productId])
+}
+
+model HeroBanner {
+  id         Int    @id @default(autoincrement())
+  title      String
+  subtitle   String
+  priceTag   String
+  imageUrl   String @db.VarChar(1000)
+  buttonLink String
+}
+
+model AfterSalesService {
+  id         Int    @id @default(autoincrement())
+  title      String
+  imageUrl   String @db.VarChar(1000)
+  buttonText String
+  buttonLink String
+  sortOrder  Int    @default(0)
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+}

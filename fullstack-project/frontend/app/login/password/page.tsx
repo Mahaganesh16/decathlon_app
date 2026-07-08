@@ -1,0 +1,109 @@
+'use client';
+
+import React, { useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+
+export default function LoginPasswordPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const email = searchParams.get('email') || '';
+
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+
+    if (!password) {
+      setError('Please enter your password.');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const res = await fetch('http://localhost:5000/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || 'Invalid email or password.');
+        setLoading(false);
+        return;
+      }
+
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+
+      router.push('/');
+    } catch (err) {
+      console.error(err);
+      setError('Could not reach the server. Is the backend running on port 5000?');
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-white">
+      <div className="max-w-[600px] mx-auto px-4 pt-8">
+        <button
+          onClick={() => router.back()}
+          className="flex items-center gap-2 text-gray-800 font-medium mb-8"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l7.5-7.5M3 12l7.5 7.5M3 12h18" />
+          </svg>
+          Back
+        </button>
+
+        <div className="flex justify-center mb-10">
+          <div className="text-3xl font-black uppercase text-[#007dba] tracking-tighter italic select-none">
+            DECATHLON
+          </div>
+        </div>
+
+        <h1 className="text-3xl font-bold mb-2">Enter your password</h1>
+        <p className="text-sm text-gray-600 mb-6">
+          Signing in as <span className="font-medium text-gray-900">{email}</span>
+        </p>
+
+        {error && (
+          <div className="mb-4 rounded-xs bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3">
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+              Password
+            </label>
+            <input
+              id="password"
+              type="password"
+              autoFocus
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Your password"
+              className="w-full border border-gray-300 rounded-xs px-4 py-3 text-sm focus:outline-none focus:border-[#007dba] transition-colors"
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-[#2b4cc4] hover:bg-[#233f9e] disabled:opacity-60 text-white font-bold uppercase text-sm rounded-xs py-3 transition-colors"
+          >
+            {loading ? 'Signing in...' : 'Login'}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
