@@ -24,3 +24,50 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* ===== Hero Banner Animations ===== */
+
+@keyframes heroKenBurns {
+  0% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(1.12);
+  }
+}
+
+@keyframes heroFadeSlideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.hero-kenburns {
+  animation: heroKenBurns 6s ease-out forwards;
+}
+
+.hero-text-item {
+  opacity: 0;
+  animation: heroFadeSlideUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.hero-text-item.delay-1 {
+  animation-delay: 0.15s;
+}
+
+.hero-text-item.delay-2 {
+  animation-delay: 0.3s;
+}
+
+.hero-text-item.delay-3 {
+  animation-delay: 0.45s;
+}
+
+.hero-dot {
+  transition: width 0.4s ease, background-color 0.4s ease, opacity 0.4s ease;
+}

@@ -6,6 +6,7 @@ import Footer from './components/Footer';
 import { getStoredUser, logout, AuthUser } from './lib/auth';
 import { addToCart, fetchCart } from './lib/cart';
 import { addToWishlist, removeFromWishlist, fetchWishlist } from './lib/wishlist';
+import { resolveImageUrl } from './lib/media';
 
 interface AlertBanner {
   text: string;
@@ -77,7 +78,13 @@ export default function DecathlonHomepageUI() {
   const [noticeSlides, setNoticeSlides] = useState<{ text: string; bgClass: string; isLink?: boolean }[]>([]);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [fadeToggle, setFadeToggle] = useState(true);
-  const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
+  // Hero banner slider — uses a "track index" with cloned first/last slides
+  // so the carousel can slide left-to-right AND right-to-left seamlessly,
+  // including looping from the last slide back to the first (and vice versa)
+  // without an abrupt jump.
+  const [heroTrackIndex, setHeroTrackIndex] = useState(1);
+  const [heroTransitionOn, setHeroTransitionOn] = useState(true);
+  const [heroCycle, setHeroCycle] = useState(0);
   const [addingProductId, setAddingProductId] = useState<number | null>(null);
   const [cartCount, setCartCount] = useState(0);
   const [wishlistedIds, setWishlistedIds] = useState<Set<number>>(new Set());
@@ -201,13 +208,67 @@ export default function DecathlonHomepageUI() {
     return () => clearInterval(interval);
   }, [noticeSlides]);
 
+  const heroSlideCount = data?.heroBanners?.length || 0;
+
+  // Move forward one slide (used by autoplay and the "next" arrow)
+  const goToNextHero = () => {
+    setHeroTransitionOn(true);
+    setHeroTrackIndex((prev) => prev + 1);
+  };
+
+  // Move back one slide (used by the "prev" arrow) — this is what makes the
+  // carousel able to slide right-to-left as well as left-to-right
+  const goToPrevHero = () => {
+    setHeroTransitionOn(true);
+    setHeroTrackIndex((prev) => prev - 1);
+  };
+
+  // Jump straight to a slide (used by the pagination dots)
+  const goToHero = (realIndex: number) => {
+    setHeroTransitionOn(true);
+    setHeroTrackIndex(realIndex + 1);
+  };
+
   useEffect(() => {
-    if (!data?.heroBanners || data.heroBanners.length <= 1) return;
-    const sliderInterval = setInterval(() => {
-      setCurrentHeroIndex((prev) => (prev + 1) % (data.heroBanners?.length || 1));
-    }, 4000);
+    if (heroSlideCount <= 1) return;
+    const sliderInterval = setInterval(goToNextHero, 4000);
     return () => clearInterval(sliderInterval);
-  }, [data]);
+  }, [heroSlideCount]);
+
+  // The real (0-based) index into data.heroBanners that is currently on screen,
+  // derived from the track position (which includes 1 cloned slide on each end)
+  const currentHeroIndex = heroSlideCount > 1 ? (heroTrackIndex - 1 + heroSlideCount) % heroSlideCount : 0;
+
+  // When the track lands on a cloned slide at either end, silently (no animation)
+  // snap it back to the matching real slide — this is what makes looping seamless
+  // in both directions instead of sweeping backward across every slide.
+  const handleHeroTransitionEnd = () => {
+    if (heroSlideCount <= 1) return;
+    if (heroTrackIndex === heroSlideCount + 1) {
+      setHeroTransitionOn(false);
+      setHeroTrackIndex(1);
+    } else if (heroTrackIndex === 0) {
+      setHeroTransitionOn(false);
+      setHeroTrackIndex(heroSlideCount);
+    }
+  };
+
+  // Re-enable the transition on the next animation frame after a silent snap-back
+  useEffect(() => {
+    if (!heroTransitionOn) {
+      const raf1 = requestAnimationFrame(() => {
+        const raf2 = requestAnimationFrame(() => setHeroTransitionOn(true));
+        return () => cancelAnimationFrame(raf2);
+      });
+      return () => cancelAnimationFrame(raf1);
+    }
+  }, [heroTransitionOn]);
+
+  // Bump heroCycle whenever the visible slide changes, so the title/subtitle/
+  // price/button entrance animation replays every time
+  useEffect(() => {
+    setHeroCycle((c) => c + 1);
+  }, [currentHeroIndex]);
 
   const handleSideScroll = (categoryKey: string, direction: 'left' | 'right') => {
     const trackElement = document.getElementById(`scroll-track-${categoryKey}`);
@@ -239,6 +300,9 @@ export default function DecathlonHomepageUI() {
   const productsListArray = data.products || [];
   const activeServices = data.services || [];
   const activeHeros = data.heroBanners || [];
+  // When there's only 1 (or 0) banners, there are no clones, so the track
+  // should never actually shift — avoids sliding a single slide out of view.
+  const heroTransformIndex = activeHeros.length > 1 ? heroTrackIndex : 0;
 
   const groupedProducts = productsListArray.reduce((acc, p) => {
     if (!acc[p.category]) acc[p.category] = [];
@@ -444,33 +508,100 @@ export default function DecathlonHomepageUI() {
             </div>
           )}
 
-          {/* 4. DYNAMIC HERO SLIDER BANNERS */}
+          {/* 4. DYNAMIC HERO SLIDER BANNERS — slides left-to-right and right-to-left,
+               loops seamlessly in both directions via cloned first/last slides */}
           {activeHeros.length > 0 && (
-            <div className="relative w-full rounded-xs overflow-hidden h-[340px] md:h-[400px] lg:h-[460px] shadow-xs border border-gray-100 mb-12 bg-gray-900 group select-none">
-              <div 
-                className="flex h-full w-full transition-transform duration-500 ease-in-out"
-                style={{ transform: `translateX(-${currentHeroIndex * 100}%)` }}
+            <div
+              className="relative w-full rounded-xs overflow-hidden h-[340px] md:h-[400px] lg:h-[460px] shadow-xs border border-gray-100 mb-12 bg-gray-900 group select-none"
+            >
+              <div
+                className={`flex h-full w-full ${heroTransitionOn ? 'transition-transform duration-700 ease-[cubic-bezier(0.65,0,0.35,1)]' : ''}`}
+                style={{ transform: `translateX(-${heroTransformIndex * 100}%)` }}
+                onTransitionEnd={handleHeroTransitionEnd}
               >
-                {activeHeros.map((slide) => (
-                  <div key={slide.id} className="w-full h-full flex-shrink-0 relative">
-                    <img src={slide.imageUrl} alt={slide.title} className="w-full h-full object-cover absolute inset-0 z-0" />
-                    <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/25 to-transparent z-10" />
-                    <div className="absolute inset-y-0 left-8 md:left-16 flex flex-col justify-center text-white z-20 max-w-md md:max-w-xl">
-                      <h1 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight uppercase italic leading-none drop-shadow-xs">
-                        {slide.title}
-                      </h1>
-                      <p className="text-base md:text-lg lg:text-xl font-bold text-gray-200 mt-2 tracking-tight">
-                        {slide.subtitle}
-                      </p>
-                      <div className="text-2xl md:text-3xl font-black text-yellow-400 mt-3 tracking-tighter">
-                        {slide.priceTag}
+                {/* Cloned last slide at the start + cloned first slide at the end
+                    is what lets the track keep sliding past the real edges */}
+                {(activeHeros.length > 1
+                  ? [activeHeros[activeHeros.length - 1], ...activeHeros, activeHeros[0]]
+                  : activeHeros
+                ).map((slide, idx) => {
+                  const isActive = idx === heroTransformIndex;
+                  return (
+                    <div key={`hero-slide-pos-${idx}`} className="w-full h-full flex-shrink-0 relative overflow-hidden">
+                      {/* Background image with Ken Burns zoom, replayed each time this slide becomes active */}
+                      <img
+                        key={`${slide.id}-${isActive ? heroCycle : 'idle'}`}
+                        src={resolveImageUrl(slide.imageUrl)}
+                        alt={slide.title}
+                        className={`w-full h-full object-cover absolute inset-0 z-0 ${isActive ? 'hero-kenburns' : ''}`}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/25 to-transparent z-10" />
+
+                      {/* Staggered text entrance, keyed on heroCycle so it replays every rotation */}
+                      <div className="absolute inset-y-0 left-8 md:left-16 flex flex-col justify-center text-white z-20 max-w-md md:max-w-xl">
+                        {isActive && (
+                          <React.Fragment key={heroCycle}>
+                            <h1 className="hero-text-item text-4xl md:text-5xl lg:text-6xl font-black tracking-tight uppercase italic leading-none drop-shadow-xs">
+                              {slide.title}
+                            </h1>
+                            <p className="hero-text-item delay-1 text-base md:text-lg lg:text-xl font-bold text-gray-200 mt-2 tracking-tight">
+                              {slide.subtitle}
+                            </p>
+                            <div className="hero-text-item delay-2 text-2xl md:text-3xl font-black text-yellow-400 mt-3 tracking-tighter">
+                              {slide.priceTag}
+                            </div>
+                            <Link
+                              href={slide.buttonLink || '#'}
+                              className="hero-text-item delay-3 inline-block w-fit mt-5 bg-white text-black font-black text-xs uppercase tracking-wider px-6 py-3 rounded-xs hover:bg-yellow-400 transition-colors duration-300"
+                            >
+                              Shop Now
+                            </Link>
+                          </React.Fragment>
+                        )}
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
+
+              {/* Prev / Next arrows — appear on hover. Prev slides left-to-right, Next slides right-to-left */}
+              {activeHeros.length > 1 && (
+                <>
+                  <button
+                    aria-label="Previous slide"
+                    onClick={goToPrevHero}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 z-30 w-9 h-9 rounded-full bg-white/80 hover:bg-white text-black flex items-center justify-center text-sm font-black opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer"
+                  >
+                    ❮
+                  </button>
+                  <button
+                    aria-label="Next slide"
+                    onClick={goToNextHero}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 z-30 w-9 h-9 rounded-full bg-white/80 hover:bg-white text-black flex items-center justify-center text-sm font-black opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer"
+                  >
+                    ❯
+                  </button>
+                </>
+              )}
+
+              {/* Pagination dots — active dot stretches into a pill, clicking jumps straight there */}
+              {activeHeros.length > 1 && (
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2">
+                  {activeHeros.map((slide, idx) => (
+                    <button
+                      key={slide.id}
+                      aria-label={`Go to slide ${idx + 1}`}
+                      onClick={() => goToHero(idx)}
+                      className={`hero-dot h-2 rounded-full cursor-pointer ${
+                        idx === currentHeroIndex ? 'w-7 bg-white' : 'w-2 bg-white/50 hover:bg-white/80'
+                      }`}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           )}
+
 
           {/* 5. SECTIONS DYNAMIC ROW SPREADS */}
           {Object.entries(groupedProducts).map(([categoryName, productsList]) => {
