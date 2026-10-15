@@ -25,7 +25,7 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      const res = await fetch('http://localhost:5000/api/auth/register', {
+      const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, password }),
@@ -50,7 +50,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col items-center px-4 pt-10">
+    <div className="min-h-screen bg-white text-gray-900 flex flex-col items-center px-4 pt-10">
       <Link
         href="/"
         className="text-3xl font-black uppercase text-[#007dba] tracking-tighter italic select-none mb-10"
@@ -59,17 +59,17 @@ export default function RegisterPage() {
       </Link>
 
       <div className="w-full max-w-md">
-        <h1 className="text-3xl font-bold mb-6">Create your account</h1>
+        <h1 className="text-3xl font-extrabold text-gray-950 mb-6 tracking-tight">Create your account</h1>
 
         {error && (
-          <div className="mb-4 rounded-xs bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3">
+          <div className="mb-4 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 font-medium">
             {error}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="name" className="block text-sm font-semibold text-gray-900 mb-1.5">
               Full name
             </label>
             <input
@@ -79,12 +79,12 @@ export default function RegisterPage() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Your name"
-              className="w-full border border-gray-300 rounded-xs px-4 py-3 text-sm focus:outline-none focus:border-[#007dba] transition-colors"
+              className="w-full bg-white text-gray-900 placeholder:text-gray-500 border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#007dba] focus:ring-4 focus:ring-[#007dba]/15 transition-all font-medium"
             />
           </div>
 
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="email" className="block text-sm font-semibold text-gray-900 mb-1.5">
               Email
             </label>
             <input
@@ -94,12 +94,12 @@ export default function RegisterPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
-              className="w-full border border-gray-300 rounded-xs px-4 py-3 text-sm focus:outline-none focus:border-[#007dba] transition-colors"
+              className="w-full bg-white text-gray-900 placeholder:text-gray-500 border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#007dba] focus:ring-4 focus:ring-[#007dba]/15 transition-all font-medium"
             />
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="password" className="block text-sm font-semibold text-gray-900 mb-1.5">
               Password
             </label>
             <input
@@ -110,12 +110,12 @@ export default function RegisterPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="At least 6 characters"
-              className="w-full border border-gray-300 rounded-xs px-4 py-3 text-sm focus:outline-none focus:border-[#007dba] transition-colors"
+              className="w-full bg-white text-gray-900 placeholder:text-gray-500 border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#007dba] focus:ring-4 focus:ring-[#007dba]/15 transition-all font-medium"
             />
           </div>
 
           <div>
-            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="confirmPassword" className="block text-sm font-semibold text-gray-900 mb-1.5">
               Confirm password
             </label>
             <input
@@ -126,14 +126,14 @@ export default function RegisterPage() {
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="Re-enter your password"
-              className="w-full border border-gray-300 rounded-xs px-4 py-3 text-sm focus:outline-none focus:border-[#007dba] transition-colors"
+              className="w-full bg-white text-gray-900 placeholder:text-gray-500 border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#007dba] focus:ring-4 focus:ring-[#007dba]/15 transition-all font-medium"
             />
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-[#007dba] hover:bg-[#00699b] disabled:opacity-60 text-white font-bold uppercase text-sm rounded-xs py-3 transition-colors"
+            className="w-full bg-[#007dba] hover:bg-[#00699b] disabled:opacity-60 text-white font-bold uppercase text-sm rounded-lg py-3.5 transition-colors cursor-pointer tracking-wider shadow-sm mt-2"
           >
             {loading ? 'Creating account...' : 'Create account'}
           </button>

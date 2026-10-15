@@ -32,13 +32,13 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white text-gray-900">
       <div className="max-w-[600px] mx-auto px-4 pt-8">
         <button
           onClick={() => router.back()}
-          className="flex items-center gap-2 text-gray-800 font-medium mb-8"
+          className="flex items-center gap-2 text-gray-800 hover:text-black font-semibold mb-8 transition-colors cursor-pointer"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5">
             <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l7.5-7.5M3 12l7.5 7.5M3 12h18" />
           </svg>
           Back
@@ -50,17 +50,17 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <h1 className="text-3xl font-bold mb-6">Login</h1>
+        <h1 className="text-3xl font-extrabold text-gray-950 mb-6 tracking-tight">Login</h1>
 
         {/* Tabs */}
         <div className="flex border-b border-gray-200 mb-6">
           <button
             type="button"
             onClick={() => setTab('email')}
-            className={`flex-1 pb-3 text-sm font-bold border-b-2 transition-colors ${
+            className={`flex-1 pb-3 text-sm font-bold border-b-2 transition-colors cursor-pointer ${
               tab === 'email'
-                ? 'border-[#2b4cc4] text-gray-900'
-                : 'border-transparent text-gray-400'
+                ? 'border-[#2b4cc4] text-gray-950'
+                : 'border-transparent text-gray-500 hover:text-gray-900 font-semibold'
             }`}
           >
             E-mail
@@ -68,10 +68,10 @@ export default function LoginPage() {
           <button
             type="button"
             onClick={() => setTab('phone')}
-            className={`flex-1 pb-3 text-sm font-bold border-b-2 transition-colors ${
+            className={`flex-1 pb-3 text-sm font-bold border-b-2 transition-colors cursor-pointer ${
               tab === 'phone'
-                ? 'border-[#2b4cc4] text-gray-900'
-                : 'border-transparent text-gray-400'
+                ? 'border-[#2b4cc4] text-gray-950'
+                : 'border-transparent text-gray-500 hover:text-gray-900 font-semibold'
             }`}
           >
             Phone number
@@ -79,7 +79,7 @@ export default function LoginPage() {
         </div>
 
         {error && (
-          <div className="mb-4 rounded-xs bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3">
+          <div className="mb-4 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 font-medium">
             {error}
           </div>
         )}
@@ -87,7 +87,7 @@ export default function LoginPage() {
         <form onSubmit={handleNext} className="space-y-5">
           {tab === 'email' ? (
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="email" className="block text-sm font-semibold text-gray-900 mb-1.5">
                 Enter an email address
               </label>
               <input
@@ -96,18 +96,18 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Email"
-                className="w-full border border-gray-300 rounded-xs px-4 py-3 text-sm focus:outline-none focus:border-[#007dba] transition-colors"
+                className="w-full bg-white text-gray-900 placeholder:text-gray-500 border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#007dba] focus:ring-4 focus:ring-[#007dba]/15 transition-all font-medium"
               />
             </div>
           ) : (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-semibold text-gray-900 mb-1.5">
                 Mobile phone number
               </label>
               <div className="flex gap-3">
-                <div className="flex items-center gap-1 border border-gray-300 rounded-xs px-3 py-3 text-sm">
-                  🇮🇳 <span>+91</span>
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                <div className="flex items-center gap-1.5 border border-gray-300 rounded-lg px-3.5 py-3 text-sm bg-white text-gray-900 font-semibold">
+                  <span>🇮🇳</span> <span>+91</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 text-gray-500">
                     <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
                   </svg>
                 </div>
@@ -116,7 +116,7 @@ export default function LoginPage() {
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="Mobile phone number"
-                  className="flex-1 border border-gray-300 rounded-xs px-4 py-3 text-sm focus:outline-none focus:border-[#007dba] transition-colors"
+                  className="flex-1 bg-white text-gray-900 placeholder:text-gray-500 border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#007dba] focus:ring-4 focus:ring-[#007dba]/15 transition-all font-medium"
                 />
               </div>
             </div>
@@ -125,7 +125,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-[#2b4cc4] hover:bg-[#233f9e] disabled:opacity-60 text-white font-bold uppercase text-sm rounded-xs py-3 transition-colors"
+            className="w-full bg-[#2b4cc4] hover:bg-[#233f9e] disabled:opacity-60 text-white font-bold uppercase text-sm rounded-lg py-3.5 transition-colors cursor-pointer tracking-wider shadow-sm"
           >
             {loading ? 'Please wait...' : 'Next'}
           </button>
@@ -135,21 +135,21 @@ export default function LoginPage() {
         <div className="mt-6 space-y-3">
           <button
             type="button"
-            className="w-full flex items-center justify-center gap-3 border border-gray-300 rounded-xs py-3 font-bold text-sm hover:bg-gray-50 transition-colors"
+            className="w-full flex items-center justify-center gap-3 border border-gray-300 rounded-lg py-3 font-semibold text-sm text-gray-800 hover:text-gray-950 hover:bg-gray-50 transition-colors bg-white cursor-pointer"
           >
             <GoogleIcon />
             Continue with Google
           </button>
           <button
             type="button"
-            className="w-full flex items-center justify-center gap-3 border border-gray-300 rounded-xs py-3 font-bold text-sm hover:bg-gray-50 transition-colors"
+            className="w-full flex items-center justify-center gap-3 border border-gray-300 rounded-lg py-3 font-semibold text-sm text-gray-800 hover:text-gray-950 hover:bg-gray-50 transition-colors bg-white cursor-pointer"
           >
             <FacebookIcon />
             Continue with Facebook
           </button>
           <button
             type="button"
-            className="w-full flex items-center justify-center gap-3 border border-gray-300 rounded-xs py-3 font-bold text-sm hover:bg-gray-50 transition-colors"
+            className="w-full flex items-center justify-center gap-3 border border-gray-300 rounded-lg py-3 font-semibold text-sm text-gray-800 hover:text-gray-950 hover:bg-gray-50 transition-colors bg-white cursor-pointer"
           >
             <AppleIcon />
             Continue with Apple

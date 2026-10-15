@@ -1,6 +1,6 @@
 import { getOwnerId } from './cart';
 
-const API_BASE = 'http://localhost:5000';
+const API_BASE = '';
 
 export interface WishlistProduct {
   id: number;
@@ -50,9 +50,14 @@ export async function addToWishlist(productId: number) {
 }
 
 export async function fetchWishlist(): Promise<WishlistResponse> {
-  const res = await fetch(`${API_BASE}/api/wishlist/${getOwnerId()}`);
-  await assertOk(res, 'fetch wishlist');
-  return res.json();
+  try {
+    const res = await fetch(`${API_BASE}/api/wishlist/${getOwnerId()}`);
+    await assertOk(res, 'fetch wishlist');
+    return await res.json();
+  } catch (err) {
+    console.warn('[wishlist] Server unreachable or error fetching wishlist:', err);
+    return { items: [] };
+  }
 }
 
 export async function removeFromWishlist(productId: number) {

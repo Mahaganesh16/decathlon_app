@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Footer from '../components/Footer';
+import SearchBar from '../components/SearchBar';
 import { getStoredUser, logout, AuthUser } from '../lib/auth';
 import { fetchWishlist, removeFromWishlist, WishlistItem } from '../lib/wishlist';
 import { addToCart } from '../lib/cart';
@@ -72,18 +73,8 @@ export default function WishlistPage() {
             DECATHLON
           </Link>
 
-          <div className="flex-1 max-w-2xl relative">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
-                <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5-12m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-              </svg>
-            </span>
-            <input
-              type="text"
-              placeholder='Search for "Rain Co"|'
-              className="w-full bg-[#f2f2f2] rounded-full text-sm pl-10 pr-4 py-2.5 focus:outline-none border border-transparent focus:border-gray-300 transition-all font-medium"
-              readOnly
-            />
+          <div className="flex-1 max-w-2xl">
+            <SearchBar />
           </div>
 
           <div className="flex items-center gap-6 text-[11px] text-gray-800">

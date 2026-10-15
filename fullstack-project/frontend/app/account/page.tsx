@@ -4,10 +4,11 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getStoredUser, logout, AuthUser } from '../lib/auth';
+import SearchBar from '../components/SearchBar';
 
 type TabKey = 'orders' | 'profile' | 'wallet' | 'rewards' | 'address';
 
-export default function AccountPage() {
+function AccountContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -61,15 +62,8 @@ export default function AccountPage() {
             DECATHLON
           </Link>
 
-          <div className="flex-1 max-w-xl relative">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
-              <SearchIcon />
-            </span>
-            <input
-              type="text"
-              placeholder='Search for "Yoga Mats"'
-              className="w-full bg-[#f2f2f2] rounded-full text-sm pl-11 pr-4 py-2.5 focus:outline-none border border-transparent focus:border-gray-300 transition-all font-medium"
-            />
+          <div className="flex-1 max-w-xl">
+            <SearchBar />
           </div>
 
           <div className="hidden lg:block text-xs text-gray-800 whitespace-nowrap">
@@ -228,7 +222,7 @@ export default function AccountPage() {
                   <input
                     type="tel"
                     placeholder="Add your phone number"
-                    className="w-full border border-gray-300 rounded-xs px-4 py-3 text-sm focus:outline-none focus:border-[#007dba] transition-colors"
+                    className="w-full bg-white text-gray-900 placeholder:text-gray-500 border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#007dba] focus:ring-4 focus:ring-[#007dba]/15 transition-all font-medium"
                   />
                 </div>
                 <button className="bg-[#007dba] hover:bg-[#00699b] text-white font-bold uppercase text-sm rounded-xs px-6 py-3 transition-colors">
@@ -289,6 +283,18 @@ export default function AccountPage() {
   );
 }
 
+export default function AccountPage() {
+  return (
+    <React.Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="animate-spin rounded-full h-10 w-10 border-4 border-[#007dba] border-t-transparent"></div>
+      </div>
+    }>
+      <AccountContent />
+    </React.Suspense>
+  );
+}
+
 /* ---------------- ICONS ---------------- */
 
 function MenuIcon() {
@@ -301,8 +307,9 @@ function MenuIcon() {
 
 function SearchIcon() {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
-      <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5-12m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+      <circle cx="11" cy="11" r="7" />
+      <line x1="21" y1="21" x2="16.65" y2="16.65" />
     </svg>
   );
 }

@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { getOwnerId, mergeGuestCart } from '../../lib/cart';
 import { mergeGuestWishlist } from '../../lib/wishlist';
 
-export default function LoginPasswordPage() {
+function LoginPasswordContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const email = searchParams.get('email') || '';
@@ -30,7 +30,7 @@ export default function LoginPasswordPage() {
     const guestOwnerId = getOwnerId();
 
     try {
-      const res = await fetch('http://localhost:5000/api/auth/login', {
+      const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
@@ -82,20 +82,20 @@ export default function LoginPasswordPage() {
           </div>
         </div>
 
-        <h1 className="text-3xl font-bold mb-2">Enter your password</h1>
+        <h1 className="text-3xl font-extrabold text-gray-950 mb-2 tracking-tight">Enter your password</h1>
         <p className="text-sm text-gray-600 mb-6">
-          Signing in as <span className="font-medium text-gray-900">{email}</span>
+          Signing in as <span className="font-semibold text-gray-950">{email}</span>
         </p>
 
         {error && (
-          <div className="mb-4 rounded-xs bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3">
+          <div className="mb-4 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 font-medium">
             {error}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="password" className="block text-sm font-semibold text-gray-900 mb-1.5">
               Password
             </label>
             <input
@@ -105,19 +105,31 @@ export default function LoginPasswordPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Your password"
-              className="w-full border border-gray-300 rounded-xs px-4 py-3 text-sm focus:outline-none focus:border-[#007dba] transition-colors"
+              className="w-full bg-white text-gray-900 placeholder:text-gray-500 border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#007dba] focus:ring-4 focus:ring-[#007dba]/15 transition-all font-medium"
             />
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-[#2b4cc4] hover:bg-[#233f9e] disabled:opacity-60 text-white font-bold uppercase text-sm rounded-xs py-3 transition-colors"
+            className="w-full bg-[#2b4cc4] hover:bg-[#233f9e] disabled:opacity-60 text-white font-bold uppercase text-sm rounded-lg py-3.5 transition-colors cursor-pointer tracking-wider shadow-sm"
           >
             {loading ? 'Signing in...' : 'Login'}
           </button>
         </form>
       </div>
     </div>
+  );
+}
+
+export default function LoginPasswordPage() {
+  return (
+    <React.Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="animate-spin rounded-full h-10 w-10 border-4 border-[#007dba] border-t-transparent"></div>
+      </div>
+    }>
+      <LoginPasswordContent />
+    </React.Suspense>
   );
 }

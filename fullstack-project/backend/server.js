@@ -13,6 +13,16 @@ const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-me';
 app.use(cors());
 app.use(express.json());
 
+// Health check endpoint
+app.get('/api/health', async (req, res) => {
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    res.json({ status: 'ok', server: 'running', database: 'connected' });
+  } catch (error) {
+    res.status(503).json({ status: 'error', server: 'running', database: 'disconnected', error: error.message });
+  }
+});
+
 // ---------------------------------------------------------------------------
 // AUTH: REGISTER — saves a new user row into the "User" table in MySQL
 // ---------------------------------------------------------------------------
@@ -175,6 +185,30 @@ app.get('/api/product/:id', async (req, res) => {
   } catch (error) {
     console.error("Product detail fetch failed:", error);
     res.status(500).json({ error: "Failed to fetch product detail" });
+  }
+});
+
+// GET /api/search?q=query — instant product search
+app.get('/api/search', async (req, res) => {
+  try {
+    const q = (req.query.q || '').trim();
+    if (!q) {
+      return res.json({ products: [] });
+    }
+    const products = await prisma.product.findMany({
+      where: {
+        OR: [
+          { name: { contains: q } },
+          { brand: { contains: q } },
+          { category: { contains: q } },
+        ],
+      },
+      take: 8,
+    });
+    res.json({ products });
+  } catch (error) {
+    console.error("Search API failed:", error);
+    res.status(500).json({ error: "Failed to search products" });
   }
 });
 
@@ -427,6 +461,14 @@ app.post('/api/wishlist/merge', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Store API Backend listening live on http://localhost:${PORT}`);
+  prisma.$connect()
+    .then(() => {
+      console.log('✅ Connected to MySQL database successfully.');
+    })
+    .catch((err) => {
+      console.error('❌ Database connection failed! Please ensure MySQL is running in XAMPP (Port 3306).');
+      console.error('   Details:', err.message);
+    });
 });

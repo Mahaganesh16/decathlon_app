@@ -1,6 +1,6 @@
 import { getStoredUser } from './auth';
 
-const API_BASE = 'http://localhost:5000';
+const API_BASE = '';
 
 // Every visitor (logged in or not) gets a stable "owner id" so their cart
 // is saved in the database and survives refreshes / new tabs.
@@ -71,9 +71,14 @@ export async function addToCart(productId: number, quantity: number = 1) {
 }
 
 export async function fetchCart(): Promise<CartResponse> {
-  const res = await fetch(`${API_BASE}/api/cart/${getOwnerId()}`);
-  await assertOk(res, 'fetch cart');
-  return res.json();
+  try {
+    const res = await fetch(`${API_BASE}/api/cart/${getOwnerId()}`);
+    await assertOk(res, 'fetch cart');
+    return await res.json();
+  } catch (err) {
+    console.warn('[cart] Server unreachable or error fetching cart:', err);
+    return { items: [], totalMRP: 0, totalPrice: 0, discount: 0 };
+  }
 }
 
 export async function updateCartQuantity(productId: number, quantity: number) {

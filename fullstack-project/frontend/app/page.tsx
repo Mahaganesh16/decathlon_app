@@ -7,6 +7,7 @@ import { getStoredUser, logout, AuthUser } from './lib/auth';
 import { addToCart, fetchCart } from './lib/cart';
 import { addToWishlist, removeFromWishlist, fetchWishlist } from './lib/wishlist';
 import { resolveImageUrl } from './lib/media';
+import SearchBar from './components/SearchBar';
 
 interface AlertBanner {
   text: string;
@@ -72,6 +73,7 @@ export default function DecathlonHomepageUI() {
   const router = useRouter();
   const [data, setData] = useState<LayoutData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [backendError, setBackendError] = useState<string | null>(null);
   const [user, setUser] = useState<AuthUser | null>(null);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
 
@@ -99,19 +101,19 @@ export default function DecathlonHomepageUI() {
   const refreshCartCount = async () => {
     try {
       const cart = await fetchCart();
-      const totalQty = cart.items.reduce((sum, item) => sum + item.quantity, 0);
+      const totalQty = (cart?.items || []).reduce((sum, item) => sum + item.quantity, 0);
       setCartCount(totalQty);
-    } catch (err) {
-      console.error('Failed to load cart count:', err);
+    } catch {
+      // Backend or DB not ready yet
     }
   };
 
   const refreshWishlist = async () => {
     try {
       const wishlist = await fetchWishlist();
-      setWishlistedIds(new Set(wishlist.items.map((i) => i.productId)));
-    } catch (err) {
-      console.error('Failed to load wishlist:', err);
+      setWishlistedIds(new Set((wishlist?.items || []).map((i) => i.productId)));
+    } catch {
+      // Backend or DB not ready yet
     }
   };
 
@@ -166,9 +168,21 @@ export default function DecathlonHomepageUI() {
     { key: 'address', label: 'My Addresses', icon: <AddressMenuIcon />, href: '/account?tab=address' },
   ];
 
-  useEffect(() => {
-    fetch('http://localhost:5000/api/layout')
-      .then((res) => res.json())
+  const loadLayout = () => {
+    setLoading(true);
+    setBackendError(null);
+    refreshCartCount();
+    refreshWishlist();
+    fetch('/api/layout')
+      .then(async (res) => {
+        if (!res.ok) {
+          const body = await res.json().catch(() => null);
+          const err = new Error(body?.error || `HTTP error! status: ${res.status}`);
+          (err as any).status = res.status;
+          throw err;
+        }
+        return res.json();
+      })
       .then((resData) => {
         setData(resData);
         setLoading(false);
@@ -192,8 +206,17 @@ export default function DecathlonHomepageUI() {
       })
       .catch((err) => {
         console.error("API Layout connection exception:", err);
+        if (err.status === 500 || err.status === 503) {
+          setBackendError("database");
+        } else {
+          setBackendError("server");
+        }
         setLoading(false);
       });
+  };
+
+  useEffect(() => {
+    loadLayout();
   }, []);
 
   useEffect(() => {
@@ -284,6 +307,57 @@ export default function DecathlonHomepageUI() {
     });
   };
 
+  if (backendError && !data) {
+    const isDbError = backendError === 'database';
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-6">
+        <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center border border-gray-100">
+          <div className={`w-16 h-16 ${isDbError ? 'bg-amber-50 text-amber-600' : 'bg-red-50 text-red-600'} rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-black`}>
+            !
+          </div>
+          <h2 className="text-xl font-black text-gray-950 mb-2">
+            {isDbError ? 'MySQL Database Not Running' : 'Backend Server Not Detected'}
+          </h2>
+          <p className="text-sm text-gray-600 mb-6 leading-relaxed">
+            {isDbError ? (
+              <>
+                The backend server on <code className="bg-gray-100 text-blue-600 px-2 py-0.5 rounded text-xs font-mono font-bold">http://localhost:5000</code> is running, but it cannot connect to MySQL (<code className="bg-gray-100 text-blue-600 px-2 py-0.5 rounded text-xs font-mono font-bold">port 3306</code>). Please ensure MySQL is started.
+              </>
+            ) : (
+              <>
+                The frontend is trying to reach the API at{' '}
+                <code className="bg-gray-100 text-blue-600 px-2 py-0.5 rounded text-xs font-mono font-bold">http://localhost:5000</code>, but it is not responding. Please make sure the backend is running.
+              </>
+            )}
+          </p>
+          <div className="bg-gray-900 text-gray-100 text-left p-4 rounded-xl text-xs font-mono mb-6 space-y-1">
+            {isDbError ? (
+              <>
+                <span className="text-gray-400"># Start MySQL in XAMPP:</span>
+                <div className="text-green-400 font-bold">1. Open XAMPP Control Panel</div>
+                <div className="text-green-400 font-bold">2. Click &quot;Start&quot; next to MySQL</div>
+                <div className="text-gray-400 mt-2"># Or run in terminal:</div>
+                <div className="text-amber-300 font-bold">c:\xampp\mysql_start.bat</div>
+              </>
+            ) : (
+              <>
+                <span className="text-gray-400"># Start backend in another terminal:</span>
+                <div className="text-green-400 font-bold">cd fullstack-project/backend</div>
+                <div className="text-green-400 font-bold">npm run dev</div>
+              </>
+            )}
+          </div>
+          <button
+            onClick={loadLayout}
+            className="w-full bg-[#007dba] hover:bg-[#00689b] text-white font-bold py-3 px-6 rounded-lg transition-colors cursor-pointer text-sm uppercase tracking-wider"
+          >
+            Retry Connection
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (loading || !data) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#007dba]">
@@ -323,17 +397,8 @@ export default function DecathlonHomepageUI() {
               DECATHLON
             </div>
             
-            <div className="flex-1 max-w-2xl relative">
-              <span className="absolute left-3 top-3 text-gray-400">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5-12m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                </svg>
-              </span>
-              <input 
-                type="text" 
-                placeholder='Search for "Football"|' 
-                className="w-full bg-[#f2f2f2] rounded-xs text-sm pl-9 pr-4 py-2 focus:outline-none border border-transparent focus:border-gray-300 transition-all font-medium" 
-              />
+            <div className="flex-1 max-w-2xl">
+              <SearchBar />
             </div>
             
             <div className="flex items-center gap-6 font-medium text-[11px] text-gray-800">

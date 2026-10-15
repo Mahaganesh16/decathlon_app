@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Footer from '../../components/Footer';
+import SearchBar from '../../components/SearchBar';
 import { getStoredUser, logout, AuthUser } from '../../lib/auth';
 import { addToCart, fetchCart } from '../../lib/cart';
 import { addToWishlist, removeFromWishlist, fetchWishlist } from '../../lib/wishlist';
@@ -107,7 +108,7 @@ export default function ProductDetailPage() {
 
   useEffect(() => {
     if (!productId) return;
-    fetch(`http://localhost:5000/api/product/${productId}`)
+    fetch(`/api/product/${productId}`)
       .then((res) => res.json())
       .then((data) => {
         setProduct(data.product || null);
@@ -147,13 +148,8 @@ export default function ProductDetailPage() {
           <Link href="/" className="text-3xl font-black uppercase text-[#007dba] tracking-tighter cursor-pointer italic select-none">
             DECATHLON
           </Link>
-          <div className="flex-1 max-w-2xl relative">
-            <input
-              type="text"
-              placeholder={`Search for "${product.category}"`}
-              className="w-full bg-gray-100 rounded-full py-2 pl-9 pr-4 text-sm outline-none"
-              readOnly
-            />
+          <div className="flex-1 max-w-2xl">
+            <SearchBar />
           </div>
           <div className="flex items-center gap-6 text-xs font-bold text-gray-700 whitespace-nowrap">
             {user ? (

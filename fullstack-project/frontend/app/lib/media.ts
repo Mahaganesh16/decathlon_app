@@ -1,4 +1,4 @@
-export const API_BASE = 'http://localhost:5000';
+export const API_BASE = '';
 
 /**
  * Hero banner images uploaded through the admin page are stored in MySQL as a
